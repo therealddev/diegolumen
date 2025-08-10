@@ -33,7 +33,7 @@ export default function ParticleSheet({
   particleCount = 10000,
   torsionStrength = 1.0,
   color1 = '#60a5fa',
-  color2 = '#f472b6',
+  color2 = '#ff0080', // Changed to bright fluorescent pink
   rotationY = 0,
   offsetX = 0,
   offsetY = 0,
@@ -312,9 +312,9 @@ export default function ParticleSheet({
       map: pointTexture,
       vertexColors: true,
       transparent: true,
-      opacity: 0.75, // Reduced opacity for more subtle effect (was 0.6)
+      opacity: 0.85, // Increased opacity for more vibrant fluorescent effect
       sizeAttenuation: true,
-      blending: THREE.NormalBlending,
+      blending: THREE.AdditiveBlending, // Changed to additive blending for fluorescent glow
       depthWrite: false,
     });
 

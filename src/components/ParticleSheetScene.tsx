@@ -62,7 +62,7 @@ export default function ParticleSheetScene({
   particleCount = 10000,
   torsionStrength = 3.0,
   color1 = '#60a5fa',
-  color2 = '#f472b6',
+  color2 = '#ff0080', // Changed to bright fluorescent pink
   rotationY = 0,
   offsetX = 8,
   offsetY = 0,
