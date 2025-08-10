@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
 
 type ParticleSheetProps = {
   width?: number;
@@ -51,7 +52,17 @@ export default function ParticleSheet({
   intensityJitter = 0.55,
 }: ParticleSheetProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const materialRef = useRef<THREE.PointsMaterial | null>(null);
+  const materialRef = useRef<THREE.Material | null>(null);
+  const geometryRef = useRef<THREE.BufferGeometry | null>(null);
+  const originalColorsRef = useRef<Float32Array | null>(null);
+  const originalSizesRef = useRef<Float32Array | null>(null);
+  const particleStatesRef = useRef<Array<{
+    isLit: boolean;
+    targetLit: boolean;
+    litAmount: number; // 0 to 1, current interpolation
+    fadeSpeed: number; // how fast this particle fades
+    nextChangeTime: number; // when this particle should change state
+  }> | null>(null);
 
   // Keep three object's rotation in sync with prop
   useEffect(() => {
@@ -242,6 +253,7 @@ export default function ParticleSheet({
           let r = baseColor.r;
           let g = baseColor.g;
           let b = baseColor.b;
+          
           if (bias < 0) {
             const f = 1 + bias; // dims to [1-amp, 1]
             r *= f; g *= f; b *= f;
@@ -257,12 +269,13 @@ export default function ParticleSheet({
         } else {
           const t = yPercent;
           const colorMix = new THREE.Color().lerpColors(color1Obj, color2Obj, t);
+          
           colors[idx] = colorMix.r;
           colors[idx + 1] = colorMix.g;
           colors[idx + 2] = colorMix.b;
         }
 
-        sizes[particleIndex] = 0.08 + Math.random() * 0.04;
+        sizes[particleIndex] = 0.25 + Math.random() * 0.1; // Much bigger base size: 0.25-0.35
         particleIndex++;
       }
     }
@@ -271,30 +284,43 @@ export default function ParticleSheet({
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
+    // Store original colors and sizes for animation
+    originalColorsRef.current = colors.slice();
+    originalSizesRef.current = sizes.slice();
+
+    // Initialize particle states for smooth lighting animation
+    particleStatesRef.current = Array.from({ length: totalParticles }, () => ({
+      isLit: false,
+      targetLit: false,
+      litAmount: 0,
+      fadeSpeed: 0.8 + Math.random() * 0.4, // Random fade speed between 0.8-1.2
+      nextChangeTime: Math.random() * 10, // Random initial change time
+    }));
+
     return geo;
   }, [particleCount, width, height, color1, color2, torsionStrength, torsionNodes, maxAngleRadians, dnaMode, baseTorsion, paletteColors, paletteMode, paletteBands, intensityJitter]);
 
-  // Create a circular point texture with subtle blur
+  // Create a subtle blurred dot texture
   const pointTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
+    canvas.width = 32;
+    canvas.height = 32;
 
     const context = canvas.getContext('2d');
     if (!context) return null;
 
-    // Add subtle blur effect
-    context.filter = 'blur(1px)';
+    // Apply heavy blur to the entire canvas
+    context.filter = 'blur(3.5px)';
 
-    const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+    // Create a tighter gradient for just a blurred dot
+    const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 12);
     gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(0.15, 'rgba(255, 255, 255, 0.9)');
-    gradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.4)');
+    gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.8)');
     gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
     context.fillStyle = gradient;
     context.beginPath();
-    context.arc(32, 32, 32, 0, Math.PI * 2);
+    context.arc(16, 16, 12, 0, Math.PI * 2);
     context.fill();
 
     const texture = new THREE.Texture(canvas);
@@ -307,24 +333,125 @@ export default function ParticleSheet({
       return new THREE.PointsMaterial({ size: 0.1, vertexColors: true });
     }
 
-    const mat = new THREE.PointsMaterial({
-      size: 0.2,
-      map: pointTexture,
-      vertexColors: true,
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        pointTexture: { value: pointTexture },
+        size: { value: 800.0 }, // Much higher base size multiplier
+      },
+      vertexShader: `
+        attribute float size;
+        varying vec3 vColor;
+        
+        void main() {
+          vColor = color;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = size * (800.0 / -mvPosition.z);
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D pointTexture;
+        varying vec3 vColor;
+        
+        void main() {
+          gl_FragColor = vec4(vColor, 1.0);
+          gl_FragColor = gl_FragColor * texture2D(pointTexture, gl_PointCoord);
+          if (gl_FragColor.a < 0.001) discard;
+        }
+      `,
+      blending: THREE.AdditiveBlending,
+      depthTest: false,
       transparent: true,
-      opacity: 0.85, // Increased opacity for more vibrant fluorescent effect
-      sizeAttenuation: true,
-      blending: THREE.AdditiveBlending, // Changed to additive blending for fluorescent glow
-      depthWrite: false,
+      vertexColors: true,
     });
 
     materialRef.current = mat;
     return mat;
   }, [pointTexture]);
 
+  // Smooth animation system for dynamic lighting
+  useFrame((state, delta) => {
+    const currentTime = state.clock.elapsedTime;
+    
+    if (geometryRef.current && originalColorsRef.current && originalSizesRef.current && particleStatesRef.current) {
+      const colorAttribute = geometryRef.current.getAttribute('color') as THREE.BufferAttribute;
+      const sizeAttribute = geometryRef.current.getAttribute('size') as THREE.BufferAttribute;
+      
+      if (colorAttribute && sizeAttribute) {
+        const colors = colorAttribute.array as Float32Array;
+        const sizes = sizeAttribute.array as Float32Array;
+        const originalColors = originalColorsRef.current;
+        const originalSizes = originalSizesRef.current;
+        const particleStates = particleStatesRef.current;
+        
+        let needsUpdate = false;
+        
+        // Update each particle's state
+        for (let i = 0; i < particleStates.length; i++) {
+          const state = particleStates[i];
+          
+                     // Check if it's time to change this particle's target state
+           if (currentTime > state.nextChangeTime) {
+             // Randomly decide if this particle should be lit (0.3% chance for very subtle effect)
+             state.targetLit = Math.random() < 0.001;
+             // Set next change time (1-3 seconds from now for shorter intervals)
+             state.nextChangeTime = currentTime + 1 + Math.random() * 2;
+           }
+          
+                     // Smoothly interpolate towards target state (faster fade)
+           const targetAmount = state.targetLit ? 1 : 0;
+           const fadeSpeed = state.fadeSpeed * delta * 6; // Much faster fade speed
+          
+          if (Math.abs(state.litAmount - targetAmount) > 0.01) {
+            if (state.litAmount < targetAmount) {
+              state.litAmount = Math.min(1, state.litAmount + fadeSpeed);
+            } else {
+              state.litAmount = Math.max(0, state.litAmount - fadeSpeed);
+            }
+            needsUpdate = true;
+          }
+          
+                     // Apply the interpolated lighting effect
+           const colorIndex = i * 3;
+           const litFactor = state.litAmount;
+           
+           // Make lit particles pure white (stronger effect)
+           if (litFactor > 0) {
+             colors[colorIndex] = originalColors[colorIndex] + (1 - originalColors[colorIndex]) * litFactor;
+             colors[colorIndex + 1] = originalColors[colorIndex + 1] + (1 - originalColors[colorIndex + 1]) * litFactor;
+             colors[colorIndex + 2] = originalColors[colorIndex + 2] + (1 - originalColors[colorIndex + 2]) * litFactor;
+           } else {
+             colors[colorIndex] = originalColors[colorIndex];
+             colors[colorIndex + 1] = originalColors[colorIndex + 1];
+             colors[colorIndex + 2] = originalColors[colorIndex + 2];
+           }
+           
+           // Scale sizes appropriately for shader
+           const originalSize = originalSizes[i];
+           const litSize = 0.4 + Math.random() * 0.15; // Lit: 0.4-0.55 (a little bigger than normal 0.25-0.35)
+           sizes[i] = originalSize + (litSize - originalSize) * litFactor;
+        }
+        
+        // Mark attributes as needing update if any particle changed
+        if (needsUpdate) {
+          colorAttribute.needsUpdate = true;
+          sizeAttribute.needsUpdate = true;
+        }
+      }
+    }
+  });
+
   return (
     <group ref={groupRef} position={[offsetX, offsetY, 0]}>
-      <points geometry={geometry} material={material} />
+      <points 
+        geometry={geometry} 
+        material={material}
+        ref={(points) => {
+          if (points) {
+            geometryRef.current = points.geometry;
+          }
+        }}
+      />
     </group>
   );
 } 

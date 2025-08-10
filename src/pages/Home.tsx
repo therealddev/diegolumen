@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import ParticleSheetScene from '../components/ParticleSheetScene';
 import Hero from '../components/Hero';
+import ProblemSection from '../components/ProblemSection';
+import SolutionSection from '../components/SolutionSection';
+import Team from '../components/Team';
 
 export default function Home() {
   const [scrollPercent, setScrollPercent] = useState(0);
@@ -45,8 +48,8 @@ export default function Home() {
     smoothData.current.target = currentScroll;
     
     // Calculate target rotation and offset
-    const turnsPerPx = 1 / 1200;
-    smoothData.current.targetRotation = currentScroll * turnsPerPx * Math.PI * -0.7;
+    const turnsPerPx = 1 / 800; // Reduced from 1200 to 800 for more rotation
+    smoothData.current.targetRotation = currentScroll * turnsPerPx * Math.PI * -1.2; // Increased from -0.7 to -1.2
     
     const worldUnitsPerPx = 0.02;
     smoothData.current.targetOffset = currentScroll * worldUnitsPerPx;
@@ -119,14 +122,14 @@ export default function Home() {
     <div className="min-h-screen text-white relative bg-[#1d1d1d]">
       {/* Background Scene across the whole page */}
       <ParticleSheetScene 
-        width={20}
-        height={80}
-        particleCount={20000} 
+        width={10}
+        height={100}
+        particleCount={50000} 
         torsionStrength={45.0}
         color1="#3b82f6" 
         color2="#ec4899"
         rotationY={rotationY}
-        offsetX={6}
+        offsetX={3}
         offsetY={offsetY}
         // DNA-like torsion parameters - much more spiraly
         dnaMode={true}
@@ -145,6 +148,15 @@ export default function Home() {
 
       {/* Hero Section */}
       <Hero />
+
+      {/* Problem Section */}
+      <ProblemSection />
+
+      {/* Solution Section */}
+      <SolutionSection />
+
+      {/* Team Section */}
+      <Team />
 
       {/* Additional Content */}
       <section className="min-h-screen flex items-center relative z-20">

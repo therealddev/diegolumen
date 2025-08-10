@@ -95,7 +95,7 @@ export default function ParticleSheetScene({
         style={{ background: '#1d1d1d' }}
       >
         {/* Galaxy background - furthest back */}
-        <Galaxy 
+        {/* <Galaxy 
           count={150000}
           size={0.1}
           radius={50}
@@ -105,7 +105,7 @@ export default function ParticleSheetScene({
           randomnessPower={1}
           insideColor="#ffffff"
           outsideColor="#e5e7eb"
-        />
+        /> */}
         
         {/* Background lines - middle layer */}
         <BackgroundLines />

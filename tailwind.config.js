@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Urbanist', 'sans-serif'],
+        sans: ['Gloock', 'serif'],
       },
     },
   },

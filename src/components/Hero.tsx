@@ -6,7 +6,7 @@ export default function Hero() {
       <div className="container mx-auto px-6 md:px-10 lg:px-16">
         <div className="max-w-3xl">
           <motion.h1 
-            className="text-5xl font-medium mb-4"
+            className="text-7xl font-light mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
