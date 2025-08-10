@@ -30,6 +30,31 @@ type ParticleSheetSceneProps = {
   intensityJitter?: number;
 };
 
+// Background vertical lines component
+function BackgroundLines() {
+  return (
+    <>
+      {/* Left line */}
+      <mesh position={[-15, 0, -10]}>
+        <planeGeometry args={[0.05, 100]} />
+        <meshBasicMaterial color="#4b5563" transparent opacity={0.3} />
+      </mesh>
+      
+      {/* Center line */}
+      <mesh position={[0, 0, -10]}>
+        <planeGeometry args={[0.05, 100]} />
+        <meshBasicMaterial color="#4b5563" transparent opacity={0.3} />
+      </mesh>
+      
+      {/* Right line */}
+      <mesh position={[15, 0, -10]}>
+        <planeGeometry args={[0.05, 100]} />
+        <meshBasicMaterial color="#4b5563" transparent opacity={0.3} />
+      </mesh>
+    </>
+  );
+}
+
 export default function ParticleSheetScene({
   width = 5,
   height = 20,
@@ -70,6 +95,10 @@ export default function ParticleSheetScene({
         <color attach="background" args={['#1d1d1d']} />
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />
+        
+        {/* Background vertical lines */}
+        <BackgroundLines />
+        
         <ParticleSheet
           width={width}
           height={height}

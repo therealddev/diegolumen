@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import ParticleSheetScene from '../components/ParticleSheetScene';
+import Hero from '../components/Hero';
 
 export default function Home() {
   const [scrollPercent, setScrollPercent] = useState(0);
@@ -142,22 +143,10 @@ export default function Home() {
         intensityJitter={0.6}
       />
 
-      {/* Foreground Content */}
-      <section className="min-h-screen flex items-center relative z-20">
-        <div className="container mx-auto px-6 md:px-10 lg:px-16">
-          <div className="max-w-3xl">
-            <h1 className="text-5xl font-bold mb-4">DNA-like Particle Sheet</h1>
-            <p className="text-xl text-gray-300">
-              Scroll to rotate the DNA helix and pan vertically. When you stop scrolling, watch it slowly auto-rotate. Notice the smooth interpolation and varying levels of torsion creating a DNA-like structure.
-            </p>
-            <div className="mt-8 text-gray-400">
-              <p>Rotation (rad): {rotationY.toFixed(2)}</p>
-              <p>Scroll: {scrollPercent.toFixed(0)}%</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Section */}
+      <Hero />
 
+      {/* Additional Content */}
       <section className="min-h-screen flex items-center relative z-20">
         <div className="container mx-auto px-6 md:px-10 lg:px-16">
           <div className="max-w-4xl">

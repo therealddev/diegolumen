@@ -219,19 +219,20 @@ export default function ParticleSheet({
         if (paletteColors && paletteColors.length > 0) {
           let baseColor: THREE.Color;
           
-          // 5% chance for pure white highlight
-          if (Math.random() < 0.05) {
+          // Reduced chance for pure white highlight - only 1% instead of 5%
+          if (Math.random() < 0.01) {
             baseColor = new THREE.Color(1, 1, 1); // Pure white
             sizes[particleIndex] = 0.12 + Math.random() * 0.06; // Larger size for highlights
           } else {
-            // Existing color logic
+            // Existing color logic - exclude white from random selection
+            const nonWhitePalette = paletteColors.slice(0, -1); // Remove white from selection
             if (paletteMode === 'striped') {
               const bandIndex = Math.floor(yPercent * paletteBands);
-              const paletteIndex = bandIndex % paletteColors.length;
-              baseColor = paletteColors[paletteIndex];
+              const paletteIndex = bandIndex % nonWhitePalette.length;
+              baseColor = nonWhitePalette[paletteIndex];
             } else {
-              const paletteIndex = Math.floor(Math.random() * paletteColors.length);
-              baseColor = paletteColors[paletteIndex];
+              const paletteIndex = Math.floor(Math.random() * nonWhitePalette.length);
+              baseColor = nonWhitePalette[paletteIndex];
             }
           }
 
