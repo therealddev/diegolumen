@@ -119,14 +119,14 @@ export default function Home() {
     <div className="min-h-screen text-white relative bg-[#1d1d1d]">
       {/* Background Scene across the whole page */}
       <ParticleSheetScene 
-        width={10}
+        width={20}
         height={80}
         particleCount={20000} 
         torsionStrength={45.0}
         color1="#3b82f6" 
         color2="#ec4899"
         rotationY={rotationY}
-        offsetX={12}
+        offsetX={6}
         offsetY={offsetY}
         // DNA-like torsion parameters - much more spiraly
         dnaMode={true}

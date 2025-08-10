@@ -6,7 +6,7 @@ export default function Hero() {
       <div className="container mx-auto px-6 md:px-10 lg:px-16">
         <div className="max-w-3xl">
           <motion.h1 
-            className="text-5xl font-bold mb-4"
+            className="text-5xl font-medium mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -15,7 +15,7 @@ export default function Hero() {
           </motion.h1>
           
           <motion.p 
-            className="text-xl text-gray-300"
+            className="text-lg text-gray-300"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
@@ -25,7 +25,7 @@ export default function Hero() {
           
           <div className="mt-4 text-gray-400">
             <motion.button 
-              className="bg-yellow-400 text-white px-4 py-2 rounded-md mt-4 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.2),inset_-2px_-2px_4px_rgba(255,255,255,0.1)] hover:shadow-[inset_2px_2px_6px_rgba(255,255,255,0.3),inset_-2px_-2px_6px_rgba(255,255,255,0.2)] transition-shadow duration-200"
+              className="bg-stone-900 text-white px-4 py-2 rounded-md mt-4 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.2),inset_-2px_-2px_4px_rgba(255,255,255,0.1)] hover:shadow-[inset_2px_2px_6px_rgba(255,255,255,0.3),inset_-2px_-2px_6px_rgba(255,255,255,0.2)] transition-shadow duration-200"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
