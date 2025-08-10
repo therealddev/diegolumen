@@ -1,14 +1,26 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import Lenis from 'lenis';
 import ParticleSheetScene from '../components/ParticleSheetScene';
 import Hero from '../components/Hero';
 import ProblemSection from '../components/ProblemSection';
 import SolutionSection from '../components/SolutionSection';
 import Team from '../components/Team';
+import Hero2 from '../components/Hero2';
 
 export default function Home() {
   const [scrollPercent, setScrollPercent] = useState(0);
   const [rotationY, setRotationY] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
+  
+  // Refs to access current state values in stable callbacks
+  const setScrollPercentRef = useRef(setScrollPercent);
+  const setRotationYRef = useRef(setRotationY);
+  const setOffsetYRef = useRef(setOffsetY);
+  
+  // Update refs when setters change
+  setScrollPercentRef.current = setScrollPercent;
+  setRotationYRef.current = setRotationY;
+  setOffsetYRef.current = setOffsetY;
 
   const palette = useMemo(() => [
     "#22c55e",   // Green
@@ -38,10 +50,10 @@ export default function Home() {
     autoRotationOffset: 0, // Additional rotation for auto-rotate
   });
 
-  // Update scroll targets on actual scroll
-  const handleScroll = useCallback(() => {
+  // Update scroll targets on Lenis scroll
+  const handleScrollRef = useRef((lenis: Lenis) => {
     const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const currentScroll = window.scrollY;
+    const currentScroll = lenis.scroll;
     const newScrollPercent = Math.min(100, Math.max(0, (currentScroll / scrollHeight) * 100));
     
     // Update targets (what we want to reach)
@@ -58,11 +70,15 @@ export default function Home() {
     smoothData.current.lastScrollTime = Date.now();
     smoothData.current.isScrolling = true;
     
-    setScrollPercent(newScrollPercent);
-  }, []);
+    setScrollPercentRef.current(newScrollPercent);
+  });
 
-  // Smooth animation loop
-  const smoothScrollLoop = useCallback(() => {
+  const handleScroll = handleScrollRef.current;
+
+  // Animation loop using useRef to avoid infinite recursion
+  const animationRef = useRef<number>();
+  
+  const smoothScrollLoopRef = useRef(() => {
     const data = smoothData.current;
     const now = Date.now();
     
@@ -87,36 +103,48 @@ export default function Home() {
     data.rounded = Math.round(data.current * 100) / 100;
     
     // Update states with smoothed values + auto rotation
-    setRotationY(data.currentRotation + data.autoRotationOffset);
-    setOffsetY(data.currentOffset);
+    setRotationYRef.current(data.currentRotation + data.autoRotationOffset);
+    setOffsetYRef.current(data.currentOffset);
     
-    // Continue the loop
-    requestAnimationFrame(smoothScrollLoop);
-  }, []);
+    // Continue the loop with proper cleanup
+    animationRef.current = requestAnimationFrame(smoothScrollLoopRef.current);
+  });
+
+  const smoothScrollLoop = smoothScrollLoopRef.current;
 
   useEffect(() => {
-    // Start the smooth animation loop
-    requestAnimationFrame(smoothScrollLoop);
-    
-    // Handle scroll events (just updates targets, doesn't directly update visuals)
-    let ticking = false;
-    const throttledScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
+    // Initialize Lenis smooth scroll
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    });
 
-    handleScroll(); // Initial call
-    window.addEventListener('scroll', throttledScroll, { passive: true });
+    // Start the smooth animation loop
+    animationRef.current = requestAnimationFrame(smoothScrollLoop);
+    
+    // Handle Lenis scroll events
+    lenis.on('scroll', (e) => {
+      handleScroll(e);
+    });
+
+    // Initial call with current scroll position
+    handleScroll(lenis);
+    
+    // Lenis animation loop
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
     
     return () => {
-      window.removeEventListener('scroll', throttledScroll);
+      lenis.destroy();
+      // Clean up animation loop
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
     };
-  }, [handleScroll, smoothScrollLoop]);
+  }, []); // Empty dependency array - only run once!
 
   return (
     <div className="min-h-screen text-white relative bg-[#1d1d1d]">
@@ -146,20 +174,69 @@ export default function Home() {
         intensityJitter={0.6}
       />
 
+      {/* Space Section 1 */}
+      <section className="min-h-screen flex items-center relative z-20">
+        <div className="container mx-auto px-6 md:px-10 lg:px-16">
+          <div className="max-w-4xl">
+            <h2 className="text-4xl font-bold mb-6">DNA Particle Visualization</h2>
+            <p className="text-xl mb-6 text-gray-300">
+              Scroll to rotate and explore the DNA helix structure. Watch the particles twist and flow in response to your movement.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Space Section 2 */}
+      <section className="min-h-screen flex items-center relative z-20">
+        <div className="container mx-auto px-6 md:px-10 lg:px-16">
+          <div className="max-w-4xl">
+            <h2 className="text-4xl font-bold mb-6">Interactive Animation</h2>
+            <p className="text-xl mb-6 text-gray-300">
+              The smooth interpolation creates fluid motion. Try different scroll speeds to see various rotation effects.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Space Section 3 */}
+      <section className="min-h-screen flex items-center relative z-20">
+        <div className="container mx-auto px-6 md:px-10 lg:px-16">
+          <div className="max-w-4xl">
+            <h2 className="text-4xl font-bold mb-6">Keep Scrolling</h2>
+            <p className="text-xl mb-6 text-gray-300">
+              More space to explore the DNA structure. Notice how the auto-rotation continues when you stop scrolling.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Space Section 4 */}
+      <section className="min-h-screen flex items-center relative z-20">
+        <div className="container mx-auto px-6 md:px-10 lg:px-16">
+          <div className="max-w-4xl">
+            <h2 className="text-4xl font-bold mb-6">Extended View</h2>
+            <p className="text-xl mb-6 text-gray-300">
+              Even more space to appreciate the full range of the DNA helix animation and particle effects.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
-      <Hero />
+      {/* <Hero /> */}
+      {/* <Hero2 /> */}
 
       {/* Problem Section */}
-      <ProblemSection />
+      {/* <ProblemSection /> */}
 
       {/* Solution Section */}
-      <SolutionSection />
+      {/* <SolutionSection /> */}
 
       {/* Team Section */}
-      <Team />
+      {/* <Team /> */}
 
       {/* Additional Content */}
-      <section className="min-h-screen flex items-center relative z-20">
+      {/* <section className="min-h-screen flex items-center relative z-20">
         <div className="container mx-auto px-6 md:px-10 lg:px-16">
           <div className="max-w-4xl">
             <h2 className="text-3xl font-bold mb-6">About This DNA Visualization</h2>
@@ -171,7 +248,7 @@ export default function Home() {
             </p>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 }

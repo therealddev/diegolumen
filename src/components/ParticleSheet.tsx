@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
@@ -64,12 +64,7 @@ export default function ParticleSheet({
     nextChangeTime: number; // when this particle should change state
   }> | null>(null);
 
-  // Keep three object's rotation in sync with prop
-  useEffect(() => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = rotationY;
-    }
-  }, [rotationY]);
+  // Rotation is now handled directly in the group rotation prop
 
   type TorsionNode = { position: number; width: number; strength: number; direction: number };
 
@@ -442,7 +437,7 @@ export default function ParticleSheet({
   });
 
   return (
-    <group ref={groupRef} position={[offsetX, offsetY, 0]}>
+    <group ref={groupRef} position={[offsetX, offsetY, 0]} rotation={[0, rotationY, 0]}>
       <points 
         geometry={geometry} 
         material={material}
