@@ -312,7 +312,7 @@ export default function ParticleSheet({
       map: pointTexture,
       vertexColors: true,
       transparent: true,
-      opacity: 0.45, // Reduced opacity for more subtle effect (was 0.6)
+      opacity: 0.75, // Reduced opacity for more subtle effect (was 0.6)
       sizeAttenuation: true,
       blending: THREE.NormalBlending,
       depthWrite: false,

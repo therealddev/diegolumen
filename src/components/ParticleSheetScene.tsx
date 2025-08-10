@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import ParticleSheet from './ParticleSheet';
+import Galaxy from './Galaxy';
 
 type ParticleSheetSceneProps = {
   width?: number;
@@ -85,20 +86,31 @@ export default function ParticleSheetScene({
     <div ref={containerRef} className={className}>
       <Canvas
         camera={{
-          position: [0, 0, 20],
+          position: [0, 0, 30],
           fov: 75,
           near: 0.1,
           far: 1000
         }}
         dpr={[1, 2]}
+        style={{ background: '#1d1d1d' }}
       >
-        <color attach="background" args={['#1d1d1d']} />
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} />
+        {/* Galaxy background - furthest back */}
+        <Galaxy 
+          count={150000}
+          size={0.1}
+          radius={50}
+          branches={4}
+          spin={0.2}
+          randomness={0.8}
+          randomnessPower={1}
+          insideColor="#ffffff"
+          outsideColor="#e5e7eb"
+        />
         
-        {/* Background vertical lines */}
+        {/* Background lines - middle layer */}
         <BackgroundLines />
         
+        {/* DNA Particle Sheet - foreground */}
         <ParticleSheet
           width={width}
           height={height}

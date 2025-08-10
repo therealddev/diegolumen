@@ -116,26 +116,26 @@ export default function Home() {
   }, [handleScroll, smoothScrollLoop]);
 
   return (
-    <div className="min-h-screen text-white relative bg-gray-600">
+    <div className="min-h-screen text-white relative bg-[#1d1d1d]">
       {/* Background Scene across the whole page */}
       <ParticleSheetScene 
         width={10}
         height={80}
         particleCount={20000} 
-        torsionStrength={32.0}
+        torsionStrength={45.0}
         color1="#3b82f6" 
         color2="#ec4899"
         rotationY={rotationY}
-        offsetX={10}
+        offsetX={12}
         offsetY={offsetY}
-        // DNA-like torsion parameters - maximum dramatic twisting
+        // DNA-like torsion parameters - much more spiraly
         dnaMode={true}
-        baseTorsion={6.0}
+        baseTorsion={8.5}
         nodesCount={35}
-        nodeWidth={0.03}
-        nodeStrength={11.5}
+        nodeWidth={0.025}
+        nodeStrength={16.0}
         alternateDirection={true}
-        maxAngleRadians={7.5}
+        maxAngleRadians={10.0}
         // Random multi-hue palette with stable list and intensity variation
         colorPalette={palette}
         paletteMode="random"
