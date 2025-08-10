@@ -274,7 +274,7 @@ export default function ParticleSheet({
     return geo;
   }, [particleCount, width, height, color1, color2, torsionStrength, torsionNodes, maxAngleRadians, dnaMode, baseTorsion, paletteColors, paletteMode, paletteBands, intensityJitter]);
 
-  // Create a circular point texture
+  // Create a circular point texture with subtle blur
   const pointTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 64;
@@ -283,9 +283,12 @@ export default function ParticleSheet({
     const context = canvas.getContext('2d');
     if (!context) return null;
 
+    // Add subtle blur effect
+    context.filter = 'blur(1px)';
+
     const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
     gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(0.15, 'rgba(255, 255, 255, 0.9)'); // Tighter falloff
+    gradient.addColorStop(0.15, 'rgba(255, 255, 255, 0.9)');
     gradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.4)');
     gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
@@ -305,13 +308,13 @@ export default function ParticleSheet({
     }
 
     const mat = new THREE.PointsMaterial({
-      size: 0.25, // Slightly larger base size
+      size: 0.2,
       map: pointTexture,
       vertexColors: true,
       transparent: true,
-      opacity: 0.8, // Increased opacity
+      opacity: 0.45, // Reduced opacity for more subtle effect (was 0.6)
       sizeAttenuation: true,
-      blending: THREE.AdditiveBlending, // Changed back to additive for glow
+      blending: THREE.NormalBlending,
       depthWrite: false,
     });
 
